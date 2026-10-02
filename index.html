@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GORF: Reimagined</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<header id="hud" class="hidden">
+  <div class="hud-cell"><span class="hud-label">Score</span><span class="hud-value" id="hudScore">0</span></div>
+  <div class="hud-cell"><span class="hud-label">High</span><span class="hud-value" id="hudHi">0</span></div>
+  <div class="hud-cell hud-wide"><span class="hud-label" id="hudMissionNo">Mission 1</span><span class="hud-value hud-accent" id="hudMission">Astro Battles</span></div>
+  <div class="hud-cell"><span class="hud-label">Rank</span><span class="hud-value" id="hudRank">Space Cadet</span></div>
+  <div class="hud-cell"><span class="hud-label">Ships</span><span class="hud-value" id="hudLives">3</span></div>
+</header>
+
+<div id="banner" class="hidden"><div id="bannerTitle"></div><div id="bannerSub"></div></div>
+<div id="subtitle" class="hidden"></div>
+
+<div id="overlay">
+  <section class="modal" id="modalStart">
+    <p class="eyebrow">Five missions. One fighter.</p>
+    <h1>GORF</h1>
+    <p class="tagline">The Gorfian Empire &mdash; reimagined in 2.5D</p>
+    <ol class="missions">
+      <li><b>1</b> Astro Battles</li>
+      <li><b>2</b> Laser Attack</li>
+      <li><b>3</b> Galaxians</li>
+      <li><b>4</b> Space Warp</li>
+      <li><b>5</b> Flag Ship</li>
+    </ol>
+    <div class="keys">
+      <div><kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd> / <kbd>WASD</kbd><span>Move</span></div>
+      <div><kbd>Space</kbd><span>Quark laser &mdash; firing again recalls your shot</span></div>
+      <div><kbd>P</kbd> pause &nbsp; <kbd>M</kbd> mute<span>Touch: drag to move, tap to fire</span></div>
+    </div>
+    <button class="btn" id="btnStart">Launch</button>
+  </section>
+
+  <section class="modal hidden" id="modalPause">
+    <p class="eyebrow">Mission on hold</p>
+    <h2>Paused</h2>
+    <button class="btn" id="btnResume">Resume</button>
+    <button class="btn btn-ghost" id="btnQuit">Quit to title</button>
+  </section>
+
+  <section class="modal hidden" id="modalOver">
+    <p class="eyebrow">Long live Gorf</p>
+    <h2>Game Over</h2>
+    <dl class="stats">
+      <div><dt>Score</dt><dd id="overScore">0</dd></div>
+      <div><dt>High</dt><dd id="overHi">0</dd></div>
+      <div><dt>Rank</dt><dd id="overRank">Space Cadet</dd></div>
+    </dl>
+    <button class="btn" id="btnAgain">Fly again</button>
+  </section>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
