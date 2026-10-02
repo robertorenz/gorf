@@ -212,3 +212,6 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   #banner { animation: none; }
 }
+
+.credit { margin: 16px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-dim); }
+.credit a { color: var(--cyan); }
