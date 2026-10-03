@@ -3,7 +3,7 @@
 A browser remake of the 1981 arcade game *Gorf*, with two cabinets to choose from at the start:
 
 - **Reimagined** – a 2.5D version. Gameplay stays on a flat plane like the original; everything is drawn as extruded voxel models through a tilted perspective camera, over a scrolling deck grid and starfield.
-- **Original** – a recreation of the arcade game as it looked in 1981: flat pixel sprites on a black portrait screen, the arcade score layout, attract mode and all five missions. Sprites are drawn pixel by pixel at the browser's full resolution, so it stays sharp on any screen instead of being an upscaled low-res image.
+- **Original** – a recreation of the arcade game as it looked in 1981: flat pixel sprites on a black portrait screen, the arcade score layout, attract mode and all five missions. Sprites are hand-drawn at double the original detail, then smoothed with Scale2x and shaded, so each sprite pixel is about one screen pixel. They're rendered at the browser's full resolution with a soft phosphor glow, so the game stays sharp on any screen instead of being an upscaled low-res image.
 
 **Play it now: https://robertorenz.github.io/gorf/**
 

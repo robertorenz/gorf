@@ -18,145 +18,258 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const pick = arr => arr[(Math.random() * arr.length) | 0];
 
 /* ------------------------------------------------------------------ */
-/* Sprites: one character per pixel, '.' is transparent                */
+/* Sprites                                                             */
+/* Art is drawn at double detail (one character per half logical      */
+/* pixel, '.' transparent). At load it is smoothed with Scale2x and    */
+/* shaded from its edges, so each final pixel is a quarter of a        */
+/* logical pixel: about one device pixel on a typical screen.          */
 /* ------------------------------------------------------------------ */
+const dbl = rows => rows.flatMap(r => { const d = r.replace(/./g, c => c + c); return [d, d]; });
+const EYE = '#0b1220';
 const GAL = [[
-  '....a....',
-  '...aaa...',
-  'a..aaa..a',
-  'aa.aba.aa',
-  'aaaabaaaa',
-  'a.aaaaa.a',
-  '...a.a...',
-  '..a...a..'
+  '........aa........',
+  '........aa........',
+  '......aaaaaa......',
+  '......aaaaaa......',
+  'aa....akaaka....aa',
+  'aa....aaaaaa....aa',
+  'aaaa..aabbaa..aaaa',
+  'aaaa..aabbaa..aaaa',
+  'aaaaaaaabbaaaaaaaa',
+  'aaaaaaaabbaaaaaaaa',
+  'aa..aaaaaaaaaa..aa',
+  'aa..aaaaaaaaaa..aa',
+  '......aa..aa......',
+  '......aa..aa......',
+  '....aa......aa....',
+  '....aa......aa....'
 ], [
-  '....a....',
-  '...aaa...',
-  '...aaa...',
-  'a..aba..a',
-  'aaaabaaaa',
-  'aaaaaaaaa',
-  '.a.a.a.a.',
-  '..a...a..'
+  '........aa........',
+  '........aa........',
+  '......aaaaaa......',
+  '......aaaaaa......',
+  '......akaaka......',
+  '......aaaaaa......',
+  'aa....aabbaa....aa',
+  'aa....aabbaa....aa',
+  'aaaaaaaabbaaaaaaaa',
+  'aaaaaaaabbaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaa',
+  '..aa..aa..aa..aa..',
+  '..aa..aa..aa..aa..',
+  '....aa......aa....',
+  '....aa......aa....'
 ]];
 const SPR = {
-  ship: { pal: { w: K.white, c: K.cyan, r: K.red, y: K.yellow }, f: [[
-    '.....w.....',
-    '.....w.....',
-    '....www....',
-    '....wcw....',
-    '.r..wcw..r.',
-    '.r.wwwww.r.',
-    '.wwwwwwwww.',
-    'wwwwyyywwww',
-    'ww..w.w..ww'
+  ship: { pal: { w: K.white, c: K.cyan, C: '#0a8fb0', r: K.red, b: K.blue, y: K.yellow }, flat: '', f: [[
+    '..........ww..........',
+    '..........ww..........',
+    '.........wwww.........',
+    '.........wwww.........',
+    '........wwccww........',
+    '........wcccCw........',
+    '........wccCCw........',
+    '..rr....wwccww....rr..',
+    '..rr...wwwwwwww...rr..',
+    '..rr..wwwwwwwwww..rr..',
+    '..ww.wwwwwwwwwwww.ww..',
+    '.wwwwwwwwwwwwwwwwwwww.',
+    'wwwwwwwwwwwwwwwwwwwwww',
+    'wwwbwwwwyyyyyywwwwbwww',
+    'www..www.yyyy.www..www',
+    'ww....ww......ww....ww'
   ]] },
-  invA: { pal: { a: K.cyan }, f: [[
-    '....aaaa....',
-    '..aaaaaaaa..',
-    '.aaaaaaaaaa.',
-    '.aa..aa..aa.',
-    '.aaaaaaaaaa.',
-    '...aa..aa...',
-    '..aa.aa.aa..',
-    'aa........aa'
+  invA: { pal: { a: K.cyan, k: EYE, e: K.white }, f: [[
+    '........aaaaaaaa........',
+    '......aaaaaaaaaaaa......',
+    '....aaaaaaaaaaaaaaaa....',
+    '...aaaaaaaaaaaaaaaaaa...',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaakkekaaaakkekaaaa..',
+    '..aaaakkkkaaaakkkkaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '......aaaa....aaaa......',
+    '......aaaa....aaaa......',
+    '....aaaa..aaaa..aaaa....',
+    '....aaaa..aaaa..aaaa....',
+    'aaaa................aaaa',
+    'aaaa................aaaa'
   ], [
-    '....aaaa....',
-    '..aaaaaaaa..',
-    '.aaaaaaaaaa.',
-    '.aa..aa..aa.',
-    '.aaaaaaaaaa.',
-    '....a..a....',
-    '...a.aa.a...',
-    '....a..a....'
+    '........aaaaaaaa........',
+    '......aaaaaaaaaaaa......',
+    '....aaaaaaaaaaaaaaaa....',
+    '...aaaaaaaaaaaaaaaaaa...',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaakkekaaaakkekaaaa..',
+    '..aaaakkkkaaaakkkkaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaaaa..',
+    '........aa....aa........',
+    '........aa....aa........',
+    '......aa..aaaa..aa......',
+    '......aa..aaaa..aa......',
+    '........aa....aa........',
+    '........aa....aa........'
   ]] },
-  invB: { pal: { a: K.green }, f: [[
-    '..a.....a..',
-    '...a...a...',
-    '..aaaaaaa..',
-    '.aa.aaa.aa.',
-    'aaaaaaaaaaa',
-    'a.aaaaaaa.a',
-    'a.a.....a.a',
-    '...aa.aa...'
+  invB: { pal: { a: K.green, k: EYE, e: K.white }, f: [[
+    '....aa..........aa....',
+    '....aa..........aa....',
+    '......aa......aa......',
+    '......aa......aa......',
+    '....aaaaaaaaaaaaaa....',
+    '....aaaaaaaaaaaaaa....',
+    '..aaaakkaaaaaakkaaaa..',
+    '..aaaakeaaaaaakeaaaa..',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    'aa..aaaaaaaaaaaaaa..aa',
+    'aa..aaaaaaaaaaaaaa..aa',
+    'aa..aa..........aa..aa',
+    'aa..aa..........aa..aa',
+    '......aaaa..aaaa......',
+    '......aaaa..aaaa......'
   ], [
-    '..a.....a..',
-    'a..a...a..a',
-    'a.aaaaaaa.a',
-    'aaa.aaa.aaa',
-    'aaaaaaaaaaa',
-    '.aaaaaaaaa.',
-    '..a.....a..',
-    '.a.......a.'
+    '....aa..........aa....',
+    '....aa..........aa....',
+    'aa....aa......aa....aa',
+    'aa....aa......aa....aa',
+    'aa..aaaaaaaaaaaaaa..aa',
+    'aa..aaaaaaaaaaaaaa..aa',
+    'aaaaaakkaaaaaakkaaaaaa',
+    'aaaaaakeaaaaaakeaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    '..aaaaaaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaa..',
+    '....aa..........aa....',
+    '....aa..........aa....',
+    '..aa..............aa..',
+    '..aa..............aa..'
   ]] },
-  invC: { pal: { a: K.yellow }, f: [[
-    '...aa...',
-    '..aaaa..',
-    '.aaaaaa.',
-    'aa.aa.aa',
-    'aaaaaaaa',
-    '..a..a..',
-    '.a.aa.a.',
-    'a.a..a.a'
-  ], [
-    '...aa...',
-    '..aaaa..',
-    '.aaaaaa.',
-    'aa.aa.aa',
-    'aaaaaaaa',
-    '.a.aa.a.',
-    'a......a',
-    '.a....a.'
-  ]] },
-  gorfship: { pal: { a: K.red, y: K.yellow }, f: [[
+  invC: { pal: { a: K.yellow, k: EYE, e: K.white, m: '#b05a00' }, f: [[
     '......aaaa......',
+    '.....aaaaaa.....',
+    '....aaaaaaaa....',
     '...aaaaaaaaaa...',
-    '.aaayaayyaayaaa.',
+    '..aaaaaaaaaaaa..',
+    '.aaaaaaaaaaaaaa.',
+    'aaakkkaaaakkkaaa',
+    'aaakekaaaakekaaa',
     'aaaaaaaaaaaaaaaa',
-    '..aaa..aa..aaa..',
-    '...a........a...'
+    'aaaaaammmmaaaaaa',
+    '....aa....aa....',
+    '....aa....aa....',
+    '..aa..aaaa..aa..',
+    '..aa..aaaa..aa..',
+    'aa..aa....aa..aa',
+    'aa..aa....aa..aa'
   ], [
     '......aaaa......',
+    '.....aaaaaa.....',
+    '....aaaaaaaa....',
     '...aaaaaaaaaa...',
-    '.aayaayaayaayaa.',
+    '..aaaaaaaaaaaa..',
+    '.aaaaaaaaaaaaaa.',
+    'aaakkkaaaakkkaaa',
+    'aaakekaaaakekaaa',
     'aaaaaaaaaaaaaaaa',
-    '..aaa..aa..aaa..',
-    '...a........a...'
+    'aaaaaammmmaaaaaa',
+    '..aa..aaaa..aa..',
+    '..aa..aaaa..aa..',
+    'aa............aa',
+    'aa............aa',
+    '..aa........aa..',
+    '..aa........aa..'
   ]] },
-  laser: { pal: { a: K.steel, y: K.yellow, r: K.red }, f: [[
-    '...aaaaa...',
-    '.aaaaaaaaa.',
-    'aayaaaaayaa',
-    'aaaaaaaaaaa',
-    '.aa.aaa.aa.',
-    '....aaa....',
-    '.....r.....',
-    '.....r.....'
-  ]] },
-  robot: { pal: { a: K.orange, e: K.red, d: '#7a3000' }, f: [[
-    '...aaa...',
-    '..aaaaa..',
-    '.aeaaaea.',
-    '.aaaaaaa.',
-    'aa.ddd.aa',
-    'a.aaaaa.a',
-    '..a...a..',
-    '.aa...aa.'
+  gorfship: { pal: { a: K.red, y: K.yellow, c: K.cyan }, flat: 'y', f: [[
+    '............cccccccc............',
+    '..........cccccccccccc..........',
+    '......aaaaaaaaaaaaaaaaaaaa......',
+    '....aaaaaaaaaaaaaaaaaaaaaaaa....',
+    '..aaaayyaaaayyaaaayyaaaayyaaaa..',
+    '..aaaayyaaaayyaaaayyaaaayyaaaa..',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    '....aaaaaa....aaaa....aaaaaa....',
+    '....aaaaaa....aaaa....aaaaaa....',
+    '......aa................aa......',
+    '......aa................aa......'
   ], [
-    '...aaa...',
-    '..aaaaa..',
-    '.aeaaaea.',
-    '.aaaaaaa.',
-    'aa.ddd.aa',
-    'a.aaaaa.a',
-    '.a.....a.',
-    'aa.....aa'
+    '............cccccccc............',
+    '..........cccccccccccc..........',
+    '......aaaaaaaaaaaaaaaaaaaa......',
+    '....aaaaaaaaaaaaaaaaaaaaaaaa....',
+    '..aaaaaayyaaaayyyyaaaayyaaaaaa..',
+    '..aaaaaayyaaaayyyyaaaayyaaaaaa..',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    '....aaaaaa....aaaa....aaaaaa....',
+    '....aaaaaa....aaaa....aaaaaa....',
+    '......aa................aa......',
+    '......aa................aa......'
   ]] },
-  galBlue: { pal: { a: K.blue, b: K.yellow }, f: GAL },
-  galGreen: { pal: { a: K.green, b: K.red }, f: GAL },
-  galRed: { pal: { a: K.red, b: K.yellow }, f: GAL },
-  galFlag: { pal: { a: K.yellow, b: K.red }, f: GAL },
-  face: { pal: { a: K.steel, r: K.red, d: K.grey }, f: [[
+  laser: { pal: { a: K.steel, y: K.yellow, r: K.red, c: K.cyan }, flat: 'y', f: [[
+    '......aaaaaaaaaa......',
+    '......aaaccccaaa......',
+    '..aaaaaaaccccaaaaaaa..',
+    '..aaaaaaaaaaaaaaaaaa..',
+    'aaaayyaaaaaaaaaayyaaaa',
+    'aaaayyaaaaaaaaaayyaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    'aaaaaaaaaaaaaaaaaaaaaa',
+    '..aaaa..aaaaaa..aaaa..',
+    '..aaaa..aaaaaa..aaaa..',
+    '........aaaaaa........',
+    '........aaaaaa........',
+    '..........rr..........',
+    '..........rr..........',
+    '..........yy..........',
+    '..........yy..........'
+  ]] },
+  robot: { pal: { a: K.orange, e: K.red, d: '#5a2000' }, flat: 'e', f: [[
+    '......aaaaaa......',
+    '......aaaaaa......',
+    '....aaaaaaaaaa....',
+    '....aaaaaaaaaa....',
+    '..aaeeaaaaaaeeaa..',
+    '..aaeeaaaaaaeeaa..',
+    '..aaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaa..',
+    'aaaa..dddddd..aaaa',
+    'aaaa..dddddd..aaaa',
+    'aa..aaaaaaaaaa..aa',
+    'aa..aaaaaaaaaa..aa',
+    '....aa......aa....',
+    '....aa......aa....',
+    '..aaaa......aaaa..',
+    '..aaaa......aaaa..'
+  ], [
+    '......aaaaaa......',
+    '......aaaaaa......',
+    '....aaaaaaaaaa....',
+    '....aaaaaaaaaa....',
+    '..aaeeaaaaaaeeaa..',
+    '..aaeeaaaaaaeeaa..',
+    '..aaaaaaaaaaaaaa..',
+    '..aaaaaaaaaaaaaa..',
+    'aaaa..dddddd..aaaa',
+    'aaaa..dddddd..aaaa',
+    'aa..aaaaaaaaaa..aa',
+    'aa..aaaaaaaaaa..aa',
+    '..aa..........aa..',
+    '..aa..........aa..',
+    'aaaa..........aaaa',
+    'aaaa..........aaaa'
+  ]] },
+  galBlue: { pal: { a: K.blue, b: K.yellow, k: EYE }, f: GAL },
+  galGreen: { pal: { a: K.green, b: K.red, k: EYE }, f: GAL },
+  galRed: { pal: { a: K.red, b: K.yellow, k: EYE }, f: GAL },
+  galFlag: { pal: { a: K.yellow, b: K.red, k: EYE }, f: GAL },
+  face: { pal: { a: K.steel, r: K.red, d: K.grey }, flat: 'r', f: [dbl([
     '....aaaaaaaa....',
     '..aaaaaaaaaaaa..',
     '.aaaaaaaaaaaaaa.',
@@ -171,13 +284,52 @@ const SPR = {
     '.aaddddddddddaa.',
     '..aaaaaaaaaaaa..',
     '....aaaaaaaa....'
-  ]] }
+  ])] }
 };
+
+// Scale2x (EPX): doubles a character grid, rounding off stair-step diagonals.
+function scale2x(g) {
+  const h = g.length, w = g[0].length;
+  const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? '.' : g[y][x]);
+  const out = [];
+  for (let y = 0; y < h; y++) {
+    let r0 = '', r1 = '';
+    for (let x = 0; x < w; x++) {
+      const P = at(x, y), A = at(x, y - 1), B = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+      r0 += (C === A && C !== D && A !== B) ? A : P;
+      r0 += (A === B && A !== C && B !== D) ? B : P;
+      r1 += (D === C && D !== B && C !== A) ? C : P;
+      r1 += (B === D && B !== A && D !== C) ? D : P;
+    }
+    out.push(r0, r1);
+  }
+  return out;
+}
+const rgb = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+// Lighten (f > 0) toward white or darken (f < 0) toward black.
+function tint(c, f) {
+  const [r, g, b] = rgb(c), t = f > 0 ? 255 : 0, a = Math.min(Math.abs(f), 0.75);
+  return `rgb(${Math.round(r + (t - r) * a)},${Math.round(g + (t - g) * a)},${Math.round(b + (t - b) * a)})`;
+}
+// Light from the top-left: bright rims on top and left edges, shadow below and right.
+function shadeAt(g, x, y, base) {
+  const h = g.length, w = g[0].length;
+  const e = (dx, dy) => { const xx = x + dx, yy = y + dy; return xx < 0 || yy < 0 || xx >= w || yy >= h || g[yy][xx] === '.'; };
+  let f = 0.16 - 0.34 * y / Math.max(1, h - 1);
+  if (e(0, -1)) f += 0.38; else if (e(0, -2)) f += 0.14;
+  if (e(0, 1)) f -= 0.42; else if (e(0, 2)) f -= 0.14;
+  if (e(-1, 0)) f += 0.12;
+  if (e(1, 0)) f -= 0.2;
+  return tint(base, f);
+}
 for (const k in SPR) {
   const s = SPR[k];
-  s.w = s.f[0][0].length;
-  s.h = s.f[0].length;
+  s.g = s.f.map(scale2x);
+  s.q = 0.25;                    // logical size of one final pixel
+  s.w = s.g[0][0].length * s.q;  // logical width and height
+  s.h = s.g[0].length * s.q;
   s.color = s.pal[Object.keys(s.pal)[0]];
+  if (s.flat === undefined) s.flat = 'ke';
 }
 
 const LOGO = {
@@ -198,6 +350,7 @@ function resize() {
   S = Math.min(cv.width / LW, cv.height / LH);
   OX = (cv.width - LW * S) / 2;
   OY = (cv.height - LH * S) / 2;
+  spriteCache.clear();
 }
 const X = x => Math.round(OX + x * S);
 const Y = y => Math.round(OY + y * S);
@@ -206,21 +359,51 @@ function rect(x, y, w, h, c) {
   if (c) ctx.fillStyle = c;
   ctx.fillRect(x0, y0, Math.max(1, X(x + w) - x0), Math.max(1, Y(y + h) - y0));
 }
-function sprite(name, cx, cy, frame, k, flip, palOver) {
-  const s = SPR[name], n = s.f.length, rows = s.f[(((frame || 0) % n) + n) % n];
-  k = k || 1;
-  const x0 = cx - s.w * k / 2, y0 = cy - s.h * k / 2;
-  let last = null;
-  for (let j = 0; j < s.h; j++) {
-    const row = rows[flip ? s.h - 1 - j : j];
-    for (let i = 0; i < s.w; i++) {
-      const ch = row[i];
+// Each sprite frame is rendered once per screen size into an offscreen
+// canvas, with a soft phosphor glow, then blitted every frame.
+const spriteCache = new Map();
+function spriteImg(name, fi, flip, palOver) {
+  const key = name + ':' + fi + (flip ? 'f' : '') + (palOver ? JSON.stringify(palOver) : '');
+  let c = spriteCache.get(key);
+  if (c) return c;
+  const s = SPR[name], g = flip ? s.g[fi].slice().reverse() : s.g[fi];
+  const h = g.length, w = g[0].length, q = s.q * S;
+  const body = document.createElement('canvas');
+  body.width = Math.max(1, Math.round(w * q));
+  body.height = Math.max(1, Math.round(h * q));
+  const b = body.getContext('2d');
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const ch = g[y][x];
       if (ch === '.') continue;
-      const c = (palOver && palOver[ch]) || s.pal[ch];
-      if (c !== last) { ctx.fillStyle = c; last = c; }
-      rect(x0 + i * k, y0 + j * k, k, k);
+      const base = (palOver && palOver[ch]) || s.pal[ch];
+      b.fillStyle = s.flat.includes(ch) ? base : shadeAt(g, x, y, base);
+      const x0 = Math.round(x * q), y0 = Math.round(y * q);
+      b.fillRect(x0, y0, Math.max(1, Math.round((x + 1) * q) - x0), Math.max(1, Math.round((y + 1) * q) - y0));
     }
   }
+  const pad = Math.ceil(S * 1.6);
+  const out = document.createElement('canvas');
+  out.width = body.width + pad * 2;
+  out.height = body.height + pad * 2;
+  const o = out.getContext('2d');
+  o.filter = `blur(${(S * 0.7).toFixed(1)}px)`;
+  o.globalAlpha = 0.6;
+  o.drawImage(body, pad, pad);
+  o.filter = 'none';
+  o.globalAlpha = 1;
+  o.drawImage(body, pad, pad);
+  c = { img: out, pad };
+  spriteCache.set(key, c);
+  return c;
+}
+function sprite(name, cx, cy, frame, k, flip, palOver) {
+  const s = SPR[name], n = s.g.length, fi = (((frame || 0) % n) + n) % n;
+  k = k || 1;
+  const c = spriteImg(name, fi, flip, palOver);
+  const x0 = X(cx - s.w * k / 2) - c.pad * k, y0 = Y(cy - s.h * k / 2) - c.pad * k;
+  if (k === 1) ctx.drawImage(c.img, x0, y0);
+  else ctx.drawImage(c.img, x0, y0, c.img.width * k, c.img.height * k);
 }
 function text(str, x, y, color, size, align) {
   ctx.font = `${Math.round((size || 8) * S)}px "Press Start 2P", "Courier New", monospace`;
@@ -471,8 +654,12 @@ const MISSIONS = [
     },
     draw() {
       const c = Math.floor(time * 10) % 2 ? K.red : K.orange;
-      ctx.fillStyle = c;
-      for (const f of this.field) if (f.alive) rect(f.x, f.y, 3.6, 3);
+      for (const f of this.field) {
+        if (!f.alive) continue;
+        rect(f.x, f.y, 3.6, 3, c);
+        rect(f.x, f.y, 3.6, 0.75, tint(c, 0.45));
+        rect(f.x, f.y + 2.25, 3.6, 0.75, tint(c, -0.35));
+      }
     },
     done() { return !foes.some(f => f.alive && !f.bonus); }
   },
@@ -643,33 +830,49 @@ const MISSIONS = [
   /* 5 — Flag Ship */
   {
     name: 'FLAG SHIP',
+    // Left half of the mothership, one character per hull plate; mirrored at init.
+    // c trim, w bridge windows, d armour panels, y running lights, R reactor.
+    // The open column under the reactor is the vent you can thread a shot through.
     hull: [
-      '.......hhhhhhh.......',
-      '....hhhhhhhhhhhhh....',
-      '..hhhhyhhhhhhhyhhhh..',
-      '.hhhhhhhhhhhhhhhhhhh.',
-      'hhhhhddhhhRhhhddhhhhh',
-      'hhhhhhhhhh.hhhhhhhhhh',
-      '.hhhhhhhhh.hhhhhhhhh.',
-      '..hhhhhhhh.hhhhhhhh..',
-      '....hhhhh...hhhhh....'
+      '.................cccc',
+      '...............cccccc',
+      '..............ccwcwcw',
+      '.............cccccccc',
+      '..........hhhhhhhhhhh',
+      '.......hhhhhhhhhhhhhh',
+      '.....hhhhyhhhhhhyhhhh',
+      '...hhhhhhhhhhhhhhhhhh',
+      '..cccccccccccccccccch',
+      '.hhhhdddhhhhhhhhhhhRR',
+      'hhhhhdydhhhhhhdddhhRR',
+      'hhhhhdddhhhhhhdydhhh.',
+      'hhhhhhhhhhhhhhdddhhh.',
+      '.ccccccccccccccccccc.',
+      '..hhhhhhhhhhhhhhhhhh.',
+      '...hhhh..hhhhhhhhhhh.',
+      '...hhhh....hhhhhhhh..',
+      '...dddd.....hhhhhh...',
+      '...yyyy......dddd....',
+      '..............yy.....'
     ],
     init() {
       this.t = 0; this.fireT = 1.5; this.won = false; this.winT = 0;
       this.cx = 120; this.cy = 74;
       this.blocks = [];
-      const cols = this.hull[0].length, rows = this.hull.length;
-      const color = { h: K.blue, d: K.dark, y: K.yellow, R: K.red };
-      this.hull.forEach((row, j) => {
+      // The hull is built from half-size plates, each shaded like the sprites.
+      const map = this.hull.map(r => r + [...r].reverse().join('')), C2 = 1.5;
+      const cols = map[0].length, rows = map.length;
+      const color = { h: K.blue, c: '#7fa8ff', w: K.white, d: K.dark, y: K.yellow, R: K.red };
+      map.forEach((row, j) => {
         for (let i = 0; i < cols; i++) {
           const ch = row[i];
           if (!color[ch]) continue;
-          this.blocks.push({ lx: (i - cols / 2) * 3, ly: (j - rows / 2) * 3, w: 3, h: 3, alive: true, color: color[ch], core: ch === 'R', pts: 10 });
+          this.blocks.push({ lx: (i - cols / 2) * C2, ly: (j - rows / 2) * C2, w: C2, h: C2, alive: true, color: 'yw'.includes(ch) ? color[ch] : shadeAt(map, i, j, color[ch]), core: ch === 'R', pts: 10 });
         }
       });
       // A shimmering shield band slung under the hull.
-      for (let r = 0; r < 2; r++) {
-        for (let i = 0; i < 27; i++) this.blocks.push({ lx: (i - 13.5) * 3, ly: 20 + r * 3, w: 3, h: 3, alive: true, shield: true, pts: 5 });
+      for (let r = 0; r < 4; r++) {
+        for (let i = 0; i < 54; i++) this.blocks.push({ lx: (i - 27) * C2, ly: 20 + r * C2, w: C2, h: C2, alive: true, shield: true, pts: 5 });
       }
     },
     update(dt) {
@@ -698,6 +901,10 @@ const MISSIONS = [
       if (!best) return false;
       best.alive = false;
       if (best.core) { this.win(); return true; }
+      // Knock a ragged chunk out around the hit.
+      for (const b of this.blocks) {
+        if (b.alive && !b.core && b.shield === best.shield && Math.hypot(b.lx - best.lx, b.ly - best.ly) < 2.2 && Math.random() < 0.6) b.alive = false;
+      }
       addScore(best.pts);
       sfx.block();
       return true;
@@ -719,7 +926,7 @@ const MISSIONS = [
         let c = b.color;
         if (b.shield) c = shieldCols[(Math.floor(time * 12) + Math.floor(b.lx / 3)) & 3];
         else if (b.core) c = Math.floor(time * 8) % 2 ? K.red : K.white;
-        rect(this.cx + b.lx, this.cy + b.ly, b.w - 0.4, b.h - 0.4, c);
+        rect(this.cx + b.lx, this.cy + b.ly, b.w, b.h, c);
       }
     },
     done() { return this.won && this.winT <= 0; }
@@ -841,31 +1048,44 @@ function updateBombs(dt) {
 function drawStars() {
   for (const s of stars) {
     if (Math.sin(time * 3 + s.ph) < -0.3) continue;
-    rect(s.x, s.y, 1, 1, s.c);
+    rect(s.x, s.y, 0.6, 0.6, s.c);
   }
 }
 function drawBoom(b) {
-  const p = b.t / b.max, rays = b.big ? 12 : 8, len = b.big ? 26 : 9;
-  const cols = b.big ? [K.white, K.yellow, K.red] : [K.white, b.color];
+  const p = b.t / b.max, rays = b.big ? 20 : 12, len = b.big ? 28 : 10;
+  const cols = b.big ? [K.white, K.yellow, K.orange, K.red] : [K.white, b.color, tint(b.color, 0.4)];
+  if (p < 0.35) {
+    const r = (b.big ? 9 : 4) * (1 - p / 0.35);
+    const gr = ctx.createRadialGradient(X(b.x), Y(b.y), 0, X(b.x), Y(b.y), r * S);
+    gr.addColorStop(0, 'rgba(255,255,255,0.95)');
+    gr.addColorStop(1, 'rgba(255,200,80,0)');
+    ctx.fillStyle = gr;
+    ctx.fillRect(X(b.x - r), Y(b.y - r), r * 2 * S, r * 2 * S);
+  }
   for (let i = 0; i < rays; i++) {
-    const a = i / rays * Math.PI * 2 + (b.big ? i * 0.3 : 0);
-    for (let d = 1; d <= 3; d++) {
-      const r = len * p * d / 3;
-      const sz = b.big ? 2 : 1;
-      rect(b.x + Math.cos(a) * r - sz / 2, b.y + Math.sin(a) * r - sz / 2, sz, sz, cols[(d + Math.floor(time * 20)) % cols.length]);
+    const a = i / rays * Math.PI * 2 + (b.big ? i * 0.37 : i * 0.2);
+    for (let d = 1; d <= 4; d++) {
+      const r = len * p * d / 4 * (0.8 + (i % 3) * 0.12);
+      const sz = (b.big ? 1.25 : 0.75) * (1 - p * 0.5);
+      rect(b.x + Math.cos(a) * r - sz / 2, b.y + Math.sin(a) * r - sz / 2, sz, sz, cols[(d + i + Math.floor(time * 20)) % cols.length]);
     }
   }
-  if (p < 0.4) rect(b.x - 2, b.y - 2, 4, 4, K.white);
 }
 function drawBomb(b) {
   if (b.kind === 'zig') {
     ctx.fillStyle = K.white;
-    for (let j = 0; j < 6; j++) rect(b.x - 0.5 + ((j + Math.floor(time * 16)) % 2 ? 1 : -1), b.y - 3 + j, 1, 1);
+    for (let j = 0; j < 12; j++) rect(b.x - 0.4 + Math.sin((j + time * 30) * 0.9) * 0.9, b.y - 3 + j * 0.5, 0.75, 0.6);
   } else if (b.kind === 'ball') {
-    rect(b.x - 1.5, b.y - 1.5, 3, 3, Math.floor(time * 14) % 2 ? K.orange : K.yellow);
+    const r = 1.8 * S, gr = ctx.createRadialGradient(X(b.x - 0.4), Y(b.y - 0.4), 0, X(b.x), Y(b.y), r);
+    gr.addColorStop(0, K.white);
+    gr.addColorStop(0.4, Math.floor(time * 14) % 2 ? K.yellow : K.orange);
+    gr.addColorStop(1, 'rgba(255,60,0,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(X(b.x), Y(b.y), r, 0, Math.PI * 2); ctx.fill();
   } else {
-    rect(b.x - 0.5, b.y - 2.5, 1, 5, K.yellow);
-    rect(b.x - 0.5, b.y + 1, 1, 1.5, K.red);
+    rect(b.x - 0.4, b.y - 2.5, 0.8, 4, K.yellow);
+    rect(b.x - 0.4, b.y - 2.5, 0.8, 1, K.white);
+    rect(b.x - 0.4, b.y + 1.5, 0.8, 1, K.red);
   }
 }
 function drawHud() {
@@ -933,8 +1153,19 @@ function draw() {
   } else {
     if (M && M.draw) M.draw();
     for (const f of foes) if (f.alive) sprite(f.spr, f.x, f.y, f.frame, f.k, f.flip);
-    if (!P.dead && state !== 'over' && (P.inv <= 0 || Math.floor(time * 14) % 2)) sprite('ship', P.x, P.y);
-    if (shot) { rect(shot.x - 0.5, shot.y, 1, 6, K.yellow); rect(shot.x - 0.5, shot.y, 1, 2, K.white); }
+    if (!P.dead && state !== 'over' && (P.inv <= 0 || Math.floor(time * 14) % 2)) {
+      const fl = 1 + Math.random() * 1.6;
+      rect(P.x - 0.9, P.y + 3.6, 1.8, fl, K.orange);
+      rect(P.x - 0.4, P.y + 3.6, 0.8, fl * 0.6, K.yellow);
+      sprite('ship', P.x, P.y);
+    }
+    if (shot) {
+      ctx.globalAlpha = 0.35;
+      rect(shot.x - 1, shot.y - 0.5, 2, 7, K.yellow);
+      ctx.globalAlpha = 1;
+      rect(shot.x - 0.4, shot.y, 0.8, 6, K.yellow);
+      rect(shot.x - 0.4, shot.y, 0.8, 2, K.white);
+    }
     bombs.forEach(drawBomb);
     for (const p of pops) text(p.txt, p.x, p.y - 4 - p.t * 8, K.white, 6, 'center');
     if (state === 'intro') {
