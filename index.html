@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>GORF: Reimagined</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <canvas id="game"></canvas>
+<canvas id="classic" class="hidden"></canvas>
 
 <header id="hud" class="hidden">
   <div class="hud-cell"><span class="hud-label">Score</span><span class="hud-value" id="hudScore">0</span></div>
@@ -23,7 +24,26 @@
 <div id="subtitle" class="hidden"></div>
 
 <div id="overlay">
-  <section class="modal" id="modalStart">
+  <section class="modal modal-wide" id="modalMode">
+    <p class="eyebrow">Galactic Orbiting Robot Force</p>
+    <h1>GORF</h1>
+    <p class="tagline">Choose your cabinet</p>
+    <div class="modes">
+      <button class="mode-card" id="btnModeNew">
+        <span class="mode-tag">2.5D &middot; Voxel</span>
+        <span class="mode-name">Reimagined</span>
+        <span class="mode-desc">Extruded voxel models, a tilted camera, lighting and a scrolling deck.</span>
+      </button>
+      <button class="mode-card mode-classic" id="btnModeClassic">
+        <span class="mode-tag">Arcade &middot; 1981</span>
+        <span class="mode-name">Original</span>
+        <span class="mode-desc">The cabinet as it was: flat pixel sprites, a portrait screen and the five missions.</span>
+      </button>
+    </div>
+    <p class="credit">An unofficial fan tribute to <i>Gorf</i> (Midway, 1981), designed by Jamie Fenton. <a href="https://github.com/robertorenz/gorf" target="_blank" rel="noopener">Source &amp; credits</a> &middot; MIT License</p>
+  </section>
+
+  <section class="modal hidden" id="modalStart">
     <p class="eyebrow">Five missions. One fighter.</p>
     <h1>GORF</h1>
     <p class="tagline">The Gorfian Empire &mdash; reimagined in 2.5D</p>
@@ -40,14 +60,14 @@
       <div><kbd>P</kbd> pause &nbsp; <kbd>M</kbd> mute<span>Touch: drag to move, tap to fire</span></div>
     </div>
     <button class="btn" id="btnStart">Launch</button>
-    <p class="credit">An unofficial fan tribute to <i>Gorf</i> (Midway, 1981), designed by Jamie Fenton. <a href="https://github.com/robertorenz/gorf" target="_blank" rel="noopener">Source &amp; credits</a> &middot; MIT License</p>
+    <button class="btn btn-ghost" id="btnBack">Back</button>
   </section>
 
   <section class="modal hidden" id="modalPause">
     <p class="eyebrow">Mission on hold</p>
     <h2>Paused</h2>
     <button class="btn" id="btnResume">Resume</button>
-    <button class="btn btn-ghost" id="btnQuit">Quit to title</button>
+    <button class="btn btn-ghost" id="btnQuit">Quit to menu</button>
   </section>
 
   <section class="modal hidden" id="modalOver">
@@ -59,10 +79,12 @@
       <div><dt>Rank</dt><dd id="overRank">Space Cadet</dd></div>
     </dl>
     <button class="btn" id="btnAgain">Fly again</button>
+    <button class="btn btn-ghost" id="btnMenu">Main menu</button>
   </section>
 </div>
 
 <script src="vendor/three.min.js"></script>
+<script src="js/classic.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

@@ -935,7 +935,7 @@ function quitToTitle() {
   player.mesh.visible = false;
   $('hud').classList.add('hidden');
   $('banner').classList.add('hidden');
-  showModal('modalStart');
+  showModal('modalMode');
 }
 
 function setPaused(p) {
@@ -944,8 +944,10 @@ function setPaused(p) {
   showModal(p ? 'modalPause' : null);
 }
 
+let currentModal = null;
 function showModal(id) {
-  for (const m of ['modalStart', 'modalPause', 'modalOver']) $(m).classList.toggle('hidden', m !== id);
+  currentModal = id;
+  for (const m of ['modalMode', 'modalStart', 'modalPause', 'modalOver']) $(m).classList.toggle('hidden', m !== id);
   $('overlay').classList.toggle('hidden', !id);
   if (id) { const b = $(id).querySelector('.btn'); if (b) b.focus(); }
 }
@@ -1019,11 +1021,15 @@ function render() {
 }
 
 let last = performance.now();
+const classicOn = () => document.body.dataset.mode === 'classic';
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (!paused) update(dt);
-  render();
+  // The arcade original draws on its own canvas; idle the 3D scene meanwhile.
+  if (!classicOn()) {
+    if (!paused) update(dt);
+    render();
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1032,11 +1038,12 @@ requestAnimationFrame(frame);
 /* Input                                                               */
 /* ------------------------------------------------------------------ */
 window.addEventListener('keydown', e => {
+  if (classicOn()) return;
   if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
   if (e.repeat) return;
   keys[e.code] = true;
   if (e.code === 'Space') {
-    if (state === 'menu' || state === 'gameover') { if (document.activeElement.tagName !== 'BUTTON') startGame(); }
+    if (state === 'menu' || state === 'gameover') { if (currentModal === 'modalStart' && document.activeElement.tagName !== 'BUTTON') startGame(); }
     else fire();
   } else if (e.code === 'KeyP' || e.code === 'Escape') {
     setPaused(!paused);
@@ -1048,6 +1055,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 window.addEventListener('blur', () => {
+  if (classicOn()) return;
   for (const k in keys) keys[k] = false;
   if (state === 'play' || state === 'intro') setPaused(true);
 });
@@ -1074,9 +1082,20 @@ $('btnStart').addEventListener('click', startGame);
 $('btnAgain').addEventListener('click', startGame);
 $('btnResume').addEventListener('click', () => setPaused(false));
 $('btnQuit').addEventListener('click', quitToTitle);
+$('btnMenu').addEventListener('click', quitToTitle);
+$('btnBack').addEventListener('click', () => showModal('modalMode'));
+$('btnModeNew').addEventListener('click', () => showModal('modalStart'));
+$('btnModeClassic').addEventListener('click', () => {
+  showModal(null);
+  document.body.dataset.mode = 'classic';
+  window.GorfClassic.start({ onExit: () => {
+    delete document.body.dataset.mode;
+    showModal('modalMode');
+  } });
+});
 
 syncHud();
-showModal('modalStart');
+showModal('modalMode');
 
 // Small hook for automated checks.
 window.__gorf = { get state() { return state; }, get mission() { return missionIdx; }, enemies, keys, fire, player, step: n => { for (let i = 0; i < n; i++) update(1 / 60); }, skip: () => { enemies.forEach(removeEnemy); if (mission.win) mission.win(); if (mission.need) mission.killed = mission.need; } };

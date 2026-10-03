@@ -215,3 +215,40 @@ kbd {
 
 .credit { margin: 16px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-dim); }
 .credit a { color: var(--cyan); }
+
+/* ---------- Mode select ---------- */
+.modal-wide { width: min(620px, 100%); }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 4px; }
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  text-align: left;
+  background: #0f1e36;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: var(--body);
+  cursor: pointer;
+  transition: border-color .15s, transform .1s, background .15s;
+}
+.mode-card:hover { border-color: var(--cyan); background: #12253f; }
+.mode-card:active { transform: translateY(1px); }
+.mode-card:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.mode-tag { font-family: var(--display); font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-dim); }
+.mode-name { font-family: var(--display); font-weight: 900; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+.mode-classic .mode-name { font-family: 'Press Start 2P', var(--display); font-weight: 400; font-size: 17px; letter-spacing: 0; color: var(--amber); line-height: 1.5; }
+.mode-desc { font-size: 12.5px; line-height: 1.5; color: var(--ink-dim); }
+@media (max-width: 520px) { .modes { grid-template-columns: 1fr; } }
+
+/* ---------- Arcade original ---------- */
+#classic {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #000;
+  touch-action: none;
+}
