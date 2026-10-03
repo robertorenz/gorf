@@ -1,6 +1,9 @@
 # GORF: Reimagined
 
-A 2.5D browser remake of the 1981 arcade game *Gorf*. Gameplay stays on a flat plane like the original; everything is drawn as extruded voxel models through a tilted perspective camera, over a scrolling deck grid and starfield.
+A browser remake of the 1981 arcade game *Gorf*, with two cabinets to choose from at the start:
+
+- **Reimagined** – a 2.5D version. Gameplay stays on a flat plane like the original; everything is drawn as extruded voxel models through a tilted perspective camera, over a scrolling deck grid and starfield.
+- **Original** – a recreation of the arcade game as it looked in 1981: flat pixel sprites on a black portrait screen, the arcade score layout, attract mode and all five missions. Sprites are drawn pixel by pixel at the browser's full resolution, so it stays sharp on any screen instead of being an upscaled low-res image.
 
 **Play it now: https://robertorenz.github.io/gorf/**
 
@@ -16,6 +19,19 @@ Or run it locally: open `index.html` in a browser. No build step and no server n
 | M | Mute sound and speech |
 | Touch / mouse | Drag to steer, press to fire |
 
+### Original mode controls
+
+| Input | Action |
+| --- | --- |
+| Space / Enter | Start from the attract screen |
+| Arrow keys / WASD | Move |
+| Space | Fire (firing again recalls the shot) |
+| P | Pause |
+| M | Mute |
+| Esc | Back to the main menu |
+
+Original mode keeps its own high score and awards a bonus ship every 10,000 points.
+
 ## Missions
 
 1. **Astro Battles** – a marching invader block. A force-field dome absorbs enemy fire and opens when you shoot.
@@ -30,7 +46,8 @@ Clearing all five promotes you (Space Cadet → Captain → Colonel → General 
 
 - `index.html` – page, HUD and modals
 - `css/style.css` – styling
-- `js/game.js` – the whole game: renderer, voxel sprites, audio, missions
+- `js/game.js` – the Reimagined game (renderer, voxel sprites, audio, missions) and the menu wiring
+- `js/classic.js` – the Original arcade mode, drawn on its own 2D canvas
 - `vendor/three.min.js` – Three.js r128
 
 ## About the original
